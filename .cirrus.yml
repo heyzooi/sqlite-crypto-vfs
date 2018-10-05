@@ -2,4 +2,5 @@ task:
   name: macOS
   osx_instance:
     image: high-sierra-xcode-9.4.1
+  install_pkg-config_script: brew install pkg-config
   test_script: make test
