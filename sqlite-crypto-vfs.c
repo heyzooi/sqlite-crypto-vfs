@@ -109,7 +109,7 @@ static sqlite3_io_methods sqlite_crypto_io_methods = {
     sqlite_crypto_io_unfetch,                  /* xUnfetch */
 };
 
-int sqlite_crypto_vfs_register(uint8_t key[32], uint8_t initialization_vector[16], const char* vfs_name, int make_default)
+int sqlite_crypto_vfs_register(const uint8_t key[32], const uint8_t initialization_vector[16], const char* vfs_name, const int make_default)
 {
     sqlite3_vfs* root_vfs = sqlite3_vfs_find(NULL);
     if (!root_vfs) {
@@ -119,7 +119,7 @@ int sqlite_crypto_vfs_register(uint8_t key[32], uint8_t initialization_vector[16
     crypto_vfs.pVfs = root_vfs;
     crypto_vfs.base.szOsFile = sizeof(Crypto_File) + root_vfs->szOsFile;
     aes_key_setup(key, crypto_vfs.key_schedule, 256);
-    memcpy(initialization_vector, crypto_vfs.initialization_vector, sizeof(uint8_t) * 16);
+    memcpy(crypto_vfs.initialization_vector, initialization_vector, sizeof(uint8_t) * 16);
     int result = sqlite3_vfs_register(&crypto_vfs.base, make_default);
     return result;
 }
