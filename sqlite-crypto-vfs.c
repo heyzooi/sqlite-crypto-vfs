@@ -62,13 +62,19 @@ static int sqlite_crypto_io_unfetch(sqlite3_file*, sqlite3_int64 iOfst, void *p)
 
 void sqlite_crypto_debug(const void* buffer, int count);
 
+#define SQLITE_CRYPTO_VFS_NAME ("sqlite-crypto")
+
+const char* sqlite_crypto_vfs_name() {
+    return SQLITE_CRYPTO_VFS_NAME;
+}
+
 static Crypto_VFS crypto_vfs = {
     {
         1,                              /* iVersion */
         0,                              /* szOsFile (set by register_vlog()) */
         1024,                           /* mxPathname */
         0,                              /* pNext */
-        "sqlite-crypto",                /* zName */
+        SQLITE_CRYPTO_VFS_NAME,         /* zName */
         0,                              /* pAppData */
         crypto_vfs_open,                /* xOpen */
         crypto_vfs_delete,              /* xDelete */
@@ -109,13 +115,12 @@ static sqlite3_io_methods sqlite_crypto_io_methods = {
     sqlite_crypto_io_unfetch,                  /* xUnfetch */
 };
 
-int sqlite_crypto_vfs_register(const uint8_t key[32], const uint8_t initialization_vector[16], const char* vfs_name, const int make_default)
+int sqlite_crypto_vfs_register(const uint8_t key[32], const uint8_t initialization_vector[16], const int make_default)
 {
     sqlite3_vfs* root_vfs = sqlite3_vfs_find(NULL);
     if (!root_vfs) {
         return SQLITE_NOTFOUND;
     }
-    crypto_vfs.base.zName = vfs_name;
     crypto_vfs.pVfs = root_vfs;
     crypto_vfs.base.szOsFile = sizeof(Crypto_File) + root_vfs->szOsFile;
     aes_key_setup(key, crypto_vfs.key_schedule, 256);
@@ -134,7 +139,7 @@ static int crypto_vfs_open(
     Crypto_VFS *pCrypto_VFS = (Crypto_VFS*) pVfs;
     Crypto_File *pCrypto_File = (Crypto_File*) pFile;
     pCrypto_File->pFile = (sqlite3_file*) &pCrypto_File[1];
-    memcpy(&(pCrypto_File->key_schedule), &(pCrypto_VFS->key_schedule), sizeof(WORD) * 60);
+    memcpy(&(pCrypto_File->key_schedule), &(pCrypto_VFS->key_schedule), sizeof(uint32_t) * 60);
     memcpy(&(pCrypto_File->initialization_vector), &(pCrypto_VFS->initialization_vector), sizeof(uint8_t) * 16);
     int rc = REALVFS(pVfs)->xOpen(REALVFS(pVfs), zName, pCrypto_File->pFile, flags, pOutFlags);
     if (rc == SQLITE_OK) {
