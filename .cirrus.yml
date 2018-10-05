@@ -1,0 +1,5 @@
+task:
+  name: macOS
+  osx_instance:
+    image: high-sierra-xcode-9.4.1
+  test_script: make test
