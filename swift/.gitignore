@@ -4,3 +4,4 @@
 /*.xcodeproj
 Carthage
 build
+!**/module.modulemap
