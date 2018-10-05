@@ -1,6 +1,10 @@
 import XCTest
 import SQLiteCryptoVFS
-import SQLite3
+#if os(Linux)
+import CSQLiteLinux
+#else
+import CSQLiteDarwin
+#endif
 
 final class SQLiteCryptoVFSTests: XCTestCase {
     

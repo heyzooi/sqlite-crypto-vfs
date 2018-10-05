@@ -1,7 +1,7 @@
 import XCTest
 
-import swiftTests
+import SQLiteCryptoVFSTests
 
 var tests = [XCTestCaseEntry]()
-tests += swiftTests.allTests()
+tests += SQLiteCryptoVFSTests.allTests()
 XCTMain(tests)

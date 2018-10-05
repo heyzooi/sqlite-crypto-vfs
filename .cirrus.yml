@@ -6,5 +6,15 @@ task:
   install_pkg-config_script: brew install pkg-config
   install_sqlite_script: brew install sqlite3
   test_script: make test
+  swift_pm_test_script: cd swift; swift build && test
   swift_test_script: cd swift; swift package generate-xcodeproj --xcconfig-overrides SQLiteCryptoVFS.xcconfig && xcodebuild -scheme SQLiteCryptoVFS-Package test
+
+task:
+  name: Linux
+  container:
+    image: swift
+  git_submodule_update_init_script: git submodule update --init --recursive
+  apt_update_script: apt update
+  install_pkg-config_script: apt install pkg-config
+  install_sqlite_script: apt install libsqlite3-dev
   swift_pm_test_script: cd swift; swift build && test

@@ -43,10 +43,15 @@ let package = Package(
             name: "CSQLiteCryptoVFS",
             dependencies: []
         ),
+        .target(
+            name: "CSQLite",
+            dependencies: []
+        ),
         .testTarget(
             name: "SQLiteCryptoVFSTests",
             dependencies: [
                 "SQLiteCryptoVFS",
+                "CSQLite",
             ]
         ),
     ]
