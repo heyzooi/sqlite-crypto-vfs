@@ -50,7 +50,7 @@ int main (int argc, char *argv[])
         return EXIT_FAILURE;
     }
 
-    rc = sqlite3_exec(db, "CREATE TABLE USER (_ID TEXT PRIMARY KEY)", NULL, NULL, &zErrMsg);
+    rc = sqlite3_exec(db, "CREATE TABLE USER (_ID TEXT)", NULL, NULL, &zErrMsg);
     if (rc != SQLITE_OK) {
         std::cerr << LOGGER_INFO << "SQL Error: " << zErrMsg << std::endl;
         sqlite3_free(zErrMsg);

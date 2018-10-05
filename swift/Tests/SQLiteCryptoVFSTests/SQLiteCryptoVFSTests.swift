@@ -88,7 +88,7 @@ final class SQLiteCryptoVFSTests: XCTestCase {
             }
             
             var zErrMsg: UnsafeMutablePointer<CChar>? = nil
-            resultCode = sqlite3_exec(db, "CREATE TABLE USER (_ID TEXT PRIMARY KEY)", nil, nil, &zErrMsg)
+            resultCode = sqlite3_exec(db, "CREATE TABLE USER (_ID TEXT)", nil, nil, &zErrMsg)
             guard resultCode == SQLITE_OK else {
                 XCTFail("SQL Error: \(String(cString: zErrMsg!))")
                 sqlite3_free(zErrMsg)
