@@ -1,4 +1,4 @@
-// swift-tools-version:4.1
+// swift-tools-version:4.0
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 
 import PackageDescription
@@ -9,6 +9,16 @@ let package = Package(
         // Products define the executables and libraries produced by a package, and make them visible to other packages.
         .library(
             name: "SQLiteCryptoVFS",
+            targets: ["SQLiteCryptoVFS"]
+        ),
+        .library(
+            name: "SQLiteCryptoVFSStatic",
+            type: .static,
+            targets: ["SQLiteCryptoVFS"]
+        ),
+        .library(
+            name: "SQLiteCryptoVFSDynamic",
+            type: .dynamic,
             targets: ["SQLiteCryptoVFS"]
         ),
         .library(
@@ -26,7 +36,7 @@ let package = Package(
         .target(
             name: "SQLiteCryptoVFS",
             dependencies: [
-                "CSQLiteCryptoVFS"
+                "CSQLiteCryptoVFS",
             ]
         ),
         .target(
@@ -35,7 +45,10 @@ let package = Package(
         ),
         .testTarget(
             name: "SQLiteCryptoVFSTests",
-            dependencies: ["SQLiteCryptoVFS"]
+            dependencies: [
+                "SQLiteCryptoVFS",
+            ]
         ),
     ]
 )
+package.targets[1].type

@@ -4,5 +4,7 @@ task:
     image: high-sierra-xcode-9.4.1
   git_submodule_update_init_script: git submodule update --init --recursive
   install_pkg-config_script: brew install pkg-config
+  install_sqlite_script: brew install sqlite3
   test_script: make test
-  swift_test_script: cd swift; swift build && swift test
+  swift_pm_test_script: cd swift; swift build && test
+  swift_test_script: cd swift; swift package generate-xcodeproj --xcconfig-overrides SQLiteCryptoVFS.xcconfig && xcodebuild -scheme SQLiteCryptoVFS-Package test
