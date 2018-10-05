@@ -51,4 +51,3 @@ let package = Package(
         ),
     ]
 )
-package.targets[1].type
