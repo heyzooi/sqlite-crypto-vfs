@@ -97,25 +97,25 @@ final class SQLiteCryptoVFSTests: XCTestCase {
                 var stmt: OpaquePointer?
                 resultCode = sqlite3_prepare_v2(db, "INSERT INTO USER (_ID) VALUES (?)", -1, &stmt, nil)
                 defer {
-                    sqlite3_finalize(stmt)
+                    resultCode = sqlite3_finalize(stmt)
+                    if resultCode != SQLITE_OK {
+                        XCTFail("SQL Error: \(String(cString: sqlite3_errmsg(db)))")
+                    }
                 }
                 guard resultCode == SQLITE_OK else {
                     XCTFail("SQL Error: \(String(cString: sqlite3_errmsg(db)))")
-                    sqlite3_free(zErrMsg)
                     return
                 }
                 
                 resultCode = sqlite3_bind_text(stmt, 1, plaintext, -1, nil)
                 guard resultCode == SQLITE_OK else {
                     XCTFail("SQL Error: \(String(cString: sqlite3_errmsg(db)))")
-                    sqlite3_free(zErrMsg)
                     return
                 }
                 
                 resultCode = sqlite3_step(stmt)
                 guard resultCode == SQLITE_DONE else {
                     XCTFail("SQL Error: \(String(cString: sqlite3_errmsg(db)))")
-                    sqlite3_free(zErrMsg)
                     return
                 }
             }
@@ -124,18 +124,19 @@ final class SQLiteCryptoVFSTests: XCTestCase {
                 var stmt: OpaquePointer?
                 resultCode = sqlite3_prepare_v2(db, "SELECT * FROM USER", -1, &stmt, nil)
                 defer {
-                    sqlite3_finalize(stmt)
+                    resultCode = sqlite3_finalize(stmt)
+                    if resultCode != SQLITE_OK {
+                        XCTFail("SQL Error: \(String(cString: sqlite3_errmsg(db)))")
+                    }
                 }
                 guard resultCode == SQLITE_OK else {
                     XCTFail("SQL Error: \(String(cString: sqlite3_errmsg(db)))")
-                    sqlite3_free(zErrMsg)
                     return
                 }
                 
                 resultCode = sqlite3_step(stmt);
                 guard resultCode == SQLITE_ROW else {
                     XCTFail("SQL Error: \(String(cString: sqlite3_errmsg(db)))")
-                    sqlite3_free(zErrMsg)
                     return
                 }
                 
