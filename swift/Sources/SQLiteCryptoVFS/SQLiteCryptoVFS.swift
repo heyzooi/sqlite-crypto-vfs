@@ -10,7 +10,11 @@ public func registerVFS(
     initializationVector: Data,
     makeDefault: Bool = false
 ) throws -> Int32 {
-    return try registerVFS(key: [UInt8](key), initializationVector: [UInt8](initializationVector), makeDefault: makeDefault)
+    return try registerVFS(
+        key: [UInt8](key),
+        initializationVector: [UInt8](initializationVector),
+        makeDefault: makeDefault
+    )
 }
 
 public func registerVFS(

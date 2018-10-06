@@ -8,12 +8,21 @@ task:
   test_script: make test
   swift_pm_test_script: cd swift; swift build && swift test
   swift_test_script: cd swift; swift package generate-xcodeproj --xcconfig-overrides SQLiteCryptoVFS.xcconfig && xcodebuild -scheme SQLiteCryptoVFS-Package test
+  install_dotnet_script: brew install dotnet-sdk
+  dotnet_test_script: cd dotnet/SQLiteCryptoVFS.Tests; dotnet test
 
 task:
-  name: Linux
+  name: Linux Swift
   container:
     image: swift
   git_submodule_update_init_script: git submodule update --init --recursive
   apt_update_script: apt update
   install_sqlite_script: apt install libsqlite3-dev
   swift_pm_test_script: cd swift; swift build && swift test
+
+task:
+  name: Linux .Net
+  container:
+    image: microsoft/dotnet
+  build_script: make
+  dotnet_test_script: cd dotnet/SQLiteCryptoVFS.Tests; dotnet test
