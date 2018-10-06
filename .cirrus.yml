@@ -27,6 +27,6 @@ task:
   git_submodule_update_init_script: git submodule update --init --recursive
   apt_update_script: apt update
   install_make_script: apt install make
-  install_sqlite_script: apt install libsqlite3-dev
+  install_sqlite_script: apt install libsqlite3-dev -y
   build_script: make
   dotnet_test_script: cd dotnet/SQLiteCryptoVFS.Tests; dotnet test
