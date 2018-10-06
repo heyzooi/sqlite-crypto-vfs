@@ -1,0 +1,5 @@
+module CSQLiteCryptoVFS {
+    header "sqlite-crypto-vfs.h"
+    link "sqlite3"
+    export *
+}

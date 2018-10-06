@@ -2,4 +2,35 @@ task:
   name: macOS
   osx_instance:
     image: high-sierra-xcode-9.4.1
+  env:
+    PATH: $PATH:/usr/local/share/dotnet
+  git_submodule_update_init_script: git submodule update --init --recursive
+  brew_update_script: brew update
+  install_pkg-config_script: brew install pkg-config
+  install_sqlite_script: brew install sqlite3
   test_script: make test
+  swift_pm_test_script: cd swift; swift build && swift test
+  swift_test_script: cd swift; swift package generate-xcodeproj --xcconfig-overrides SQLiteCryptoVFS.xcconfig && xcodebuild -scheme SQLiteCryptoVFS-Package test
+  install_dotnet_script: brew cask install dotnet-sdk
+  dotnet_test_script: cd dotnet/SQLiteCryptoVFS.Tests; dotnet test
+
+task:
+  name: Swift Linux
+  container:
+    image: swift
+  git_submodule_update_init_script: git submodule update --init --recursive
+  apt_update_script: apt update
+  install_sqlite_script: apt install libsqlite3-dev
+  swift_pm_test_script: cd swift; swift build && swift test
+
+task:
+  name: .Net Linux
+  container:
+    image: microsoft/dotnet
+  git_submodule_update_init_script: git submodule update --init --recursive
+  apt_update_script: apt update
+  install_build-essential_script: apt install build-essential -y
+  install_sqlite_script: apt install libsqlite3-dev -y
+  install_pkg-config_script: apt install pkg-config -y
+  test_script: make test
+  dotnet_test_script: cd dotnet/SQLiteCryptoVFS.Tests; dotnet test
