@@ -12,7 +12,7 @@ task:
   dotnet_test_script: cd dotnet/SQLiteCryptoVFS.Tests; dotnet test
 
 task:
-  name: Linux Swift
+  name: Swift Linux
   container:
     image: swift
   git_submodule_update_init_script: git submodule update --init --recursive
@@ -21,8 +21,9 @@ task:
   swift_pm_test_script: cd swift; swift build && swift test
 
 task:
-  name: Linux .Net
+  name: .Net Linux
   container:
     image: microsoft/dotnet
+  git_submodule_update_init_script: git submodule update --init --recursive
   build_script: make
   dotnet_test_script: cd dotnet/SQLiteCryptoVFS.Tests; dotnet test
