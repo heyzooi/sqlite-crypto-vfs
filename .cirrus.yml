@@ -27,9 +27,8 @@ task:
     image: microsoft/dotnet
   git_submodule_update_init_script: git submodule update --init --recursive
   apt_update_script: apt update
-  install_make_script: apt install make
+  install_build-essential_script: apt install build-essential -y
   install_sqlite_script: apt install libsqlite3-dev -y
-  install_gcc_script: apt install gcc -y
   install_pkg-config_script: apt install pkg-config -y
   build_script: make
   dotnet_test_script: cd dotnet/SQLiteCryptoVFS.Tests; dotnet test

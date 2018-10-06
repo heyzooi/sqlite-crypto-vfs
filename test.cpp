@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <sqlite3.h>
 #include <unistd.h>
+#include <cstring>
 #include "sqlite-crypto-vfs.hpp"
 
 #define LOGGER_INFO __FILE__ << ":" << __LINE__ << " "
