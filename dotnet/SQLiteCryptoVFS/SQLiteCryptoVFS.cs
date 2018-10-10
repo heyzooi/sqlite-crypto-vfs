@@ -11,7 +11,7 @@ namespace SQLiteCryptoVFS
         private static extern IntPtr SQLiteCryptoVFSName();
 
         [DllImport(LibraryName, EntryPoint = "sqlite_crypto_vfs_register")]
-        private static extern int SQLiteCryptoVFSRegister(byte[] key, byte[] initializationVector, bool makeDefault);
+        private static extern int SQLiteCryptoVFSRegister(byte[] key, bool makeDefault);
 
         public static string VFSName
         {
@@ -21,11 +21,10 @@ namespace SQLiteCryptoVFS
             }
         }
 
-        public static int RegisterVFS(byte[] key, byte[] initializationVector, bool makeDefault = false)
+        public static int RegisterVFS(byte[] key, bool makeDefault = false)
         {
             if (key.Length != 32) throw new ArgumentException("Key must have 32 bytes", nameof(key));
-            if (initializationVector.Length != 16) throw new ArgumentException("Initialization Vector must have 16 bytes", nameof(initializationVector));
-            return SQLiteCryptoVFSRegister(key, initializationVector, makeDefault);
+            return SQLiteCryptoVFSRegister(key, makeDefault);
         }
 
     }

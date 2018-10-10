@@ -1,1 +1,1 @@
-../../../../sqlite-crypto-vfs.h
+../../../../src/sqlite-crypto-vfs.h

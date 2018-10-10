@@ -7,28 +7,22 @@ public var vfsName: String {
 
 public func registerVFS(
     key: Data,
-    initializationVector: Data,
     makeDefault: Bool = false
 ) throws -> Int32 {
     return try registerVFS(
         key: [UInt8](key),
-        initializationVector: [UInt8](initializationVector),
         makeDefault: makeDefault
     )
 }
 
 public func registerVFS(
     key: [UInt8],
-    initializationVector: [UInt8],
     makeDefault: Bool = false
 ) throws -> Int32 {
     guard key.count == 32 else {
         throw SQLiteCryptoVFSError.invalidKey(key: key)
     }
-    guard initializationVector.count == 16 else {
-        throw SQLiteCryptoVFSError.invalidInitializationVector(initializationVector: initializationVector)
-    }
-    let result = sqlite_crypto_vfs_register(key, initializationVector, makeDefault ? 1 : 0)
+    let result = sqlite_crypto_vfs_register(key, makeDefault ? 1 : 0)
     return result
 }
 
