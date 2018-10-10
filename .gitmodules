@@ -1,3 +1,3 @@
-[submodule "crypto-algorithms"]
-	path = crypto-algorithms
-	url = https://github.com/B-Con/crypto-algorithms.git
+[submodule "tiny-AES-c"]
+	path = tiny-AES-c
+	url = https://github.com/kokke/tiny-AES-c.git

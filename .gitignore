@@ -52,4 +52,8 @@ Mkfile.old
 dkms.conf
 
 # SQLite
-**/test-encrypted.db
+**/*.db
+**/*.sqlite
+
+# Binaries
+/bin

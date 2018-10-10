@@ -4,24 +4,27 @@
 #include <string.h>
 #include <sqlite3.h>
 #include <inttypes.h>
+
+#define AES256 1
+
 #include "aes.h"
 
-int aes_decrypt_cbc(const BYTE in[], size_t in_len, BYTE out[], const WORD key[], int keysize, const BYTE iv[]);
+#if AES_KEYLEN != 32
+    #error "#define AES256 1" is missing
+#endif
 
 typedef struct Crypto_VFS
 {
 	sqlite3_vfs base;
     sqlite3_vfs* pVfs;
-    uint32_t key_schedule[60];
-    uint8_t initialization_vector[16];
+    uint8_t key[32];
 } Crypto_VFS;
 
 typedef struct Crypto_File
 {
     sqlite3_file base;
     sqlite3_file* pFile;
-    uint32_t key_schedule[60];
-    uint8_t initialization_vector[16];
+    struct AES_ctx ctx;
 } Crypto_File;
 
 #define REALVFS(p) (((Crypto_VFS*)(p))->pVfs)
@@ -115,7 +118,7 @@ static sqlite3_io_methods sqlite_crypto_io_methods = {
     sqlite_crypto_io_unfetch,                  /* xUnfetch */
 };
 
-int sqlite_crypto_vfs_register(const uint8_t key[32], const uint8_t initialization_vector[16], const int make_default)
+int sqlite_crypto_vfs_register(const uint8_t key[32], const int make_default)
 {
     sqlite3_vfs* root_vfs = sqlite3_vfs_find(NULL);
     if (!root_vfs) {
@@ -123,8 +126,7 @@ int sqlite_crypto_vfs_register(const uint8_t key[32], const uint8_t initializati
     }
     crypto_vfs.pVfs = root_vfs;
     crypto_vfs.base.szOsFile = sizeof(Crypto_File) + root_vfs->szOsFile;
-    aes_key_setup(key, crypto_vfs.key_schedule, 256);
-    memcpy(crypto_vfs.initialization_vector, initialization_vector, sizeof(uint8_t) * 16);
+    memcpy(crypto_vfs.key, key, sizeof(uint8_t) * 32);
     int result = sqlite3_vfs_register(&crypto_vfs.base, make_default);
     return result;
 }
@@ -139,8 +141,7 @@ static int crypto_vfs_open(
     Crypto_VFS *pCrypto_VFS = (Crypto_VFS*) pVfs;
     Crypto_File *pCrypto_File = (Crypto_File*) pFile;
     pCrypto_File->pFile = (sqlite3_file*) &pCrypto_File[1];
-    memcpy(&(pCrypto_File->key_schedule), &(pCrypto_VFS->key_schedule), sizeof(uint32_t) * 60);
-    memcpy(&(pCrypto_File->initialization_vector), &(pCrypto_VFS->initialization_vector), sizeof(uint8_t) * 16);
+    AES_init_ctx(&(pCrypto_File->ctx), pCrypto_VFS->key);
     int rc = REALVFS(pVfs)->xOpen(REALVFS(pVfs), zName, pCrypto_File->pFile, flags, pOutFlags);
     if (rc == SQLITE_OK) {
         pFile->pMethods = &sqlite_crypto_io_methods;
@@ -236,8 +237,6 @@ static int crypto_vfs_current_time_int64(
     return REALVFS(pVfs)->xCurrentTimeInt64(REALVFS(pVfs), pOut);
 }
 
-// ----------------------
-
 static int sqlite_crypto_io_close(sqlite3_file* pFile)
 {
     return REALFILE(pFile)->pMethods->xClose(REALFILE(pFile));
@@ -254,18 +253,61 @@ void sqlite_crypto_debug(
     printf("\n");
 }
 
+void sqlite_crypto_decrypt(
+    struct AES_ctx* ctx,
+    void* buffer,
+    int count
+) {
+    const int n = count / AES_BLOCKLEN;
+    for (int i = 0; i < n; i++) {
+        AES_ECB_decrypt(ctx, buffer + (i * AES_BLOCKLEN));
+    }
+}
+
 static int sqlite_crypto_io_read(
     sqlite3_file* pFile,
     void* buffer,
     int count,
     sqlite3_int64 offset
 ) {
-    Crypto_File *pCrypto_File = (Crypto_File*) pFile;
     int rc = REALFILE(pFile)->pMethods->xRead(REALFILE(pFile), buffer, count, offset);
-    if (rc != SQLITE_IOERR_SHORT_READ) {
-        aes_decrypt_cbc(buffer, count, buffer, pCrypto_File->key_schedule, 256, pCrypto_File->initialization_vector);
+    if (rc == SQLITE_IOERR_SHORT_READ) {
+        return rc;
+    }
+    Crypto_File *pCrypto_File = (Crypto_File*) pFile;
+    const int offset_diff = offset % AES_BLOCKLEN;
+    const int count_diff = count % AES_BLOCKLEN;
+    if (offset_diff || count_diff) {
+        const sqlite3_int64 prev_offset = offset - offset_diff;
+        const int remaining_count = count - offset_diff;
+        const int remaining_count_diff = remaining_count % AES_BLOCKLEN;
+        const int block_size = (offset_diff ? AES_BLOCKLEN : 0) + (remaining_count - remaining_count_diff) + (remaining_count_diff ? AES_BLOCKLEN : 0);
+        uint8_t block[block_size];
+        rc = REALFILE(pFile)->pMethods->xRead(REALFILE(pFile), block, block_size, prev_offset);
+        if (rc == SQLITE_IOERR_SHORT_READ) {
+            return rc;
+        }
+        sqlite_crypto_decrypt(&(pCrypto_File->ctx), block, block_size);
+        if (offset_diff) {
+            memcpy(buffer, block + AES_BLOCKLEN - offset_diff, count);
+        } else {
+            memcpy(buffer, block, count);
+        }
+    } else {
+        sqlite_crypto_decrypt(&(pCrypto_File->ctx), buffer, count);
     }
     return rc;
+}
+
+void sqlite_crypto_encrypt(
+    struct AES_ctx* ctx,
+    void* buffer,
+    int count
+) {
+    const int n = count / AES_BLOCKLEN;
+    for (int i = 0; i < n; i++) {
+        AES_ECB_encrypt(ctx, buffer + (i * AES_BLOCKLEN));
+    }
 }
 
 static int sqlite_crypto_io_write(
@@ -275,9 +317,33 @@ static int sqlite_crypto_io_write(
     sqlite3_int64 offset
 ) {
     Crypto_File *pCrypto_File = (Crypto_File*) pFile;
-    uint8_t enc_buf[count];
-    aes_encrypt_cbc(buffer, count, enc_buf, pCrypto_File->key_schedule, 256, pCrypto_File->initialization_vector);
-    return REALFILE(pFile)->pMethods->xWrite(REALFILE(pFile), enc_buf, count, offset);
+    const int offset_diff = offset % AES_BLOCKLEN;
+    const int count_diff = count % AES_BLOCKLEN;
+    if (offset_diff || count_diff) {
+        const sqlite3_int64 prev_offset = offset - offset_diff;
+        const int remaining_count = count - offset_diff;
+        const int remaining_count_diff = remaining_count % AES_BLOCKLEN;
+        const int block_size = (offset_diff ? AES_BLOCKLEN : 0) + (remaining_count - remaining_count_diff) + (remaining_count_diff ? AES_BLOCKLEN : 0);
+        uint8_t block[block_size];
+        memset(block, 0, block_size);
+        int rc = SQLITE_OK;
+        const int n_blocks = block_size / AES_BLOCKLEN;
+        for (int i = 0; i < n_blocks && rc != SQLITE_IOERR_SHORT_READ; i++) {
+            rc = sqlite_crypto_io_read(pFile, block, block_size, prev_offset);
+        }
+        if (offset_diff) {
+            memcpy(block, buffer + AES_BLOCKLEN - offset_diff, count);
+        } else {
+            memcpy(block, buffer, count);
+        }
+        sqlite_crypto_encrypt(&(pCrypto_File->ctx), block, block_size);
+        return REALFILE(pFile)->pMethods->xWrite(REALFILE(pFile), block, block_size, prev_offset);
+    } else {
+        uint8_t enc_buf[count];
+        memcpy(enc_buf, buffer, count);
+        sqlite_crypto_encrypt(&(pCrypto_File->ctx), enc_buf, count);
+        return REALFILE(pFile)->pMethods->xWrite(REALFILE(pFile), enc_buf, count, offset);
+    }
 }
 
 static int sqlite_crypto_io_truncate(

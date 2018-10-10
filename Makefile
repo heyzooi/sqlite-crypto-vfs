@@ -4,8 +4,9 @@ UNAME = $(shell uname)
 CFLAGS = $(shell pkg-config --libs sqlite3) $(shell pkg-config --cflags sqlite3) -fPIC
 ARCH = $(shell getconf LONG_BIT)
 DUMPMACHINE = $(shell $(CC) -dumpmachine -m$(ARCH))
-CXXFLAGS = -g $(CFLAGS) -lsqlite-crypto-vfs -Llib/$(DUMPMACHINE)
-SQLITE_CRYPTO_VFS_SOURCE = aes.c sqlite-crypto-vfs.c
+CXXFLAGS = $(CFLAGS) -lsqlite-crypto-vfs -Llib/$(DUMPMACHINE)
+SRC_ROOT = src
+SQLITE_CRYPTO_VFS_SOURCE = $(SRC_ROOT)/aes.c $(SRC_ROOT)/sqlite-crypto-vfs.c
 
 ifeq ($(UNAME), Linux)
 LIB_PREFIX = lib
@@ -20,23 +21,30 @@ default: build
 
 clean:
 	rm -Rf lib
-	rm -f test
+	rm -Rf bin
 
 build: sqlite-crypto-vfs
 
-sqlite-crypto-vfs-arch64:
+mkdir-lib:
 	mkdir -p lib/$(DUMPMACHINE)
+
+sqlite-crypto-vfs-arch64: mkdir-lib
 	$(CC) $(CFLAGS) -shared -m64 -o lib/$(DUMPMACHINE)/$(LIB_PREFIX)sqlite-crypto-vfs$(LIB_SUFFIX) $(SQLITE_CRYPTO_VFS_SOURCE)
 
-sqlite-crypto-vfs-arch32:
-	mkdir -p lib/$(DUMPMACHINE)
+sqlite-crypto-vfs-arch32: mkdir-lib
 	$(CC) $(CFLAGS) -shared -m32 -o lib/$(DUMPMACHINE)/$(LIB_PREFIX)sqlite-crypto-vfs$(LIB_SUFFIX) $(SQLITE_CRYPTO_VFS_SOURCE)
 
 sqlite-crypto-vfs: sqlite-crypto-vfs-arch$(ARCH)
 	@echo "*** BUILD SUCCESSFUL ***"
 
-test-build: sqlite-crypto-vfs
-	$(CXX) $(CXXFLAGS) -o test test.cpp
+test-build: sqlite-crypto-vfs mkdir-bin
+	$(CXX) $(CXXFLAGS) -o bin/test $(SRC_ROOT)/test.cpp
 
 test: test-build
-	LD_LIBRARY_PATH=./lib/$(DUMPMACHINE) ./test
+	LD_LIBRARY_PATH=./lib/$(DUMPMACHINE) bin/test
+
+mkdir-bin:
+	mkdir -p bin
+
+decrypt-build: mkdir-bin
+	$(CXX) -o bin/sqlite-crypto-decrypt $(SRC_ROOT)/aes.c $(SRC_ROOT)/sqlite-crypto-decrypt.cpp
