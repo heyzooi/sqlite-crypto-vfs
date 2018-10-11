@@ -9,5 +9,5 @@ int main (int argc, char *argv[])
         return EXIT_FAILURE;
     }
     
-    return run(argv, AES_ECB_encrypt, "Encrypted file: ");
+    return run(args(argc, argv), AES_ECB_encrypt, "Encrypted file: ");
 }

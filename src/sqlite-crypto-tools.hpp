@@ -1,5 +1,7 @@
 #include <fstream>
 #include <cstdlib>
+#include <string>
+#include <vector>
 
 #define AES256 1
 
@@ -16,11 +18,21 @@ void read_hex(uint8_t* dest, int size, std::string str)
     }
 }
 
-int run(char *argv[], void (*crypto)(struct AES_ctx* ctx, uint8_t* buf), std::string output_message)
+std::vector<const std::string> args(int argc, char *argv[])
 {
-    char* input = argv[1];
-    char* output = argv[2];
-    std::string key_str = argv[3];
+    std::vector<const std::string> args;
+    args.reserve(argc);
+    for (int i = 0; i < argc; i++) {
+        args.push_back(argv[i]);
+    }
+    return args;
+}
+
+int run(std::vector<const std::string> args, void (*crypto)(struct AES_ctx* ctx, uint8_t* buf), std::string output_message)
+{
+    const std::string input = args.at(1);
+    const std::string output = args.at(2);
+    const std::string key_str = args.at(3);
     
     if (key_str.length() != 64) {
         std::cerr << "Argument <key> must have 32 bytes (64 hexadecimal characters). For example: 43616E20796F75206B6565702061207365637265743F205B595D65732F6E6F3F" << std::endl;
