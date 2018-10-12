@@ -11,8 +11,7 @@ SQLITE_CRYPTO_VFS_SOURCE = $(SRC_ROOT)/aes.c $(SRC_ROOT)/sqlite-crypto-vfs.c
 ifeq ($(UNAME), Linux)
 LIB_PREFIX = lib
 LIB_SUFFIX = .so
-endif
-ifeq ($(UNAME), Darwin)
+else ifeq ($(UNAME), Darwin)
 LIB_PREFIX = lib
 LIB_SUFFIX = .dylib
 endif

@@ -158,7 +158,7 @@ int main (int argc, char *argv[])
     
     const std::string key = "603deb1015ca71be2b73aef0857d77811f352c073b6108d72d9810a30914dff4";
     
-    std::vector<const std::string> args;
+    std::vector<std::string> args;
     
     args.push_back("");
     args.push_back(encrypted);

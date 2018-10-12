@@ -1,3 +1,4 @@
+#include <iostream>
 #include <fstream>
 #include <cstdlib>
 #include <string>
@@ -18,9 +19,9 @@ void read_hex(uint8_t* dest, int size, std::string str)
     }
 }
 
-std::vector<const std::string> args(int argc, char *argv[])
+std::vector<std::string> args(int argc, char *argv[])
 {
-    std::vector<const std::string> args;
+    std::vector<std::string> args;
     args.reserve(argc);
     for (int i = 0; i < argc; i++) {
         args.push_back(argv[i]);
@@ -28,7 +29,7 @@ std::vector<const std::string> args(int argc, char *argv[])
     return args;
 }
 
-int run(std::vector<const std::string> args, void (*crypto)(struct AES_ctx* ctx, uint8_t* buf), std::string output_message)
+int run(std::vector<std::string> args, void (*crypto)(struct AES_ctx* ctx, uint8_t* buf), const std::string output_message)
 {
     const std::string input = args.at(1);
     const std::string output = args.at(2);
