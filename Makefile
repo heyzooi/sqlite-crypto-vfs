@@ -47,3 +47,15 @@ mkdir-bin:
 
 decrypt-build: mkdir-bin
 	$(CXX) -o bin/sqlite-crypto-decrypt $(SRC_ROOT)/aes.c $(SRC_ROOT)/sqlite-crypto-decrypt.cpp
+
+encrypt-build: mkdir-bin
+	$(CXX) -o bin/sqlite-crypto-encrypt $(SRC_ROOT)/aes.c $(SRC_ROOT)/sqlite-crypto-encrypt.cpp
+
+shell:
+	curl -L https://www.sqlite.org/src/zip/sqlite.zip?r=release -o sqlite.zip
+	unzip -o sqlite.zip
+	cd sqlite; \
+	./configure; \
+	patch src/shell.c.in ../shell.patch; \
+	patch Makefile ../sqlite_makefile.patch; \
+	make sqlite3

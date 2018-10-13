@@ -1,0 +1,44 @@
+--- src/shell.c.in	2018-09-25 12:08:10.000000000 -0700
++++ src/shell.c.in changes	2018-10-12 11:23:28.000000000 -0700
+@@ -8336,6 +8336,8 @@
+ #  endif
+ #endif
+ 
++#include "sqlite-crypto-vfs.h"
++
+ #if SQLITE_SHELL_IS_UTF8
+ int SQLITE_CDECL main(int argc, char **argv){
+ #else
+@@ -8530,6 +8532,32 @@
+ #endif
+     }else if( strcmp(z,"-vfs")==0 ){
+       zVfs = cmdline_option_value(argc, argv, ++i);
++      if (!strcmp(zVfs, sqlite_crypto_vfs_name())) {
++        if (i + 1 >= argc) {
++          printf("Key for %s is missing\n", zVfs);
++          return EXIT_FAILURE;
++        }
++        const char* key_hex_str = cmdline_option_value(argc, argv, ++i);
++        const int size = 32;
++        if (strlen(key_hex_str) != size * 2) {
++          printf("Key for %s must be a %d hexadecimal characters. For example: 603deb1015ca71be2b73aef0857d77811f352c073b6108d72d9810a30914dff4\n", zVfs, size * 2);
++          return EXIT_FAILURE;
++        }
++        uint8_t key[size];
++        memset(key, 0, size);
++        char c[3];
++        c[2] = 0;
++        for (int i = 0, p = 0; i < size; i++, p += 2) {
++          c[0] = key_hex_str[p];
++          c[1] = key_hex_str[p + 1];
++          key[i] = strtol(c, NULL, 16);
++        }
++        const int rc = sqlite_crypto_vfs_register(key, 0);
++        if (rc != SQLITE_OK) {
++          printf("sqlite3_vfs_register failed for %s\n", zVfs);
++          return EXIT_FAILURE;
++        }
++      }
+ #ifdef SQLITE_HAVE_ZLIB
+     }else if( strcmp(z,"-zip")==0 ){
+       data.openMode = SHELL_OPEN_ZIPFILE;

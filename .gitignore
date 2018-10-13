@@ -54,6 +54,12 @@ dkms.conf
 # SQLite
 **/*.db
 **/*.sqlite
+/sqlite
+/sqlite.zip
 
 # Binaries
 /bin
+
+# Xcode
+/*.xcworkspace
+/*.xcodeproj

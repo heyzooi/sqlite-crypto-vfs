@@ -1,0 +1,12 @@
+--- sqlite/Makefile	2018-10-12 11:29:18.000000000 -0700
++++ sqlite/Makefile changes	2018-10-12 11:34:12.000000000 -0700
+@@ -628,7 +628,8 @@
+ sqlite3$(TEXE):	shell.c sqlite3.c
+ 	$(LTLINK) $(READLINE_FLAGS) $(SHELL_OPT) -o $@ \
+ 		shell.c sqlite3.c \
+-		$(LIBREADLINE) $(TLIBS) -rpath "$(libdir)"
++		$(LIBREADLINE) $(TLIBS) -rpath "$(libdir)" \
++    ../src/aes.c ../src/sqlite-crypto-vfs.c -I../src
+ 
+ sqldiff$(TEXE):	$(TOP)/tool/sqldiff.c sqlite3.lo sqlite3.h
+ 	$(LTLINK) -o $@ $(TOP)/tool/sqldiff.c sqlite3.lo $(TLIBS)
