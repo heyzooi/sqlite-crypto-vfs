@@ -1,7 +1,7 @@
 task:
   name: macOS
   osx_instance:
-    image: high-sierra-xcode-9.4.1
+    image: high-sierra-xcode-10.0
   env:
     PATH: $PATH:/usr/local/share/dotnet
   git_submodule_update_init_script: git submodule update --init --recursive
